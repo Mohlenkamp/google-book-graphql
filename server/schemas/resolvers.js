@@ -16,7 +16,7 @@ const resolvers = {
             if (context.user) {
               const userData = await User.findOne({ _id: context.user._id })
                 .select('-__v -password')
-
+                .populate('books');
               return userData;
             }
             throw new AuthenticationError('Not logged in');
@@ -46,23 +46,33 @@ const resolvers = {
             const token = signToken(user);
             return { token, user };
           },
-          saveBook: async (parent,saveBook) => {
-            const user = await User.find({ saveBook });
-            if (!user) {
+          saveBook: async (parent, {bookId} ,context) => {
+            if (context.user) {
+              
+              await User.findByIdAndUpdate(
+                { _id: context.user._id },
+                { $addToSet: { savedBooks: bookId } },
+                { new: true }
+              );
+              return User;
+            }
+              throw new AuthenticationError('User not found with this saved book data');
+            },
+ 
+          removeBook: async (parent,{bookId}, context) => {
+            if (context.user) {
+              await User.findByIdAndUpdate(
+                { _id: context.user._id },
+                { $pull: { savedBooks: bookId } },
+                { new: true }
+              );
+              return User;
+            }
               throw new AuthenticationError('User not found with this saved book data');
             }
-          
-            return { user };
-          },
-          removeBook: async (parent, bookId) => {
-            const user = await User.find({ bookId });
-            if (!user) {
-              throw new AuthenticationError('User not found with this remove book data');
-            }
-          
-            return { user };
-          }
     }
-};
+  }
+  
+
 
 module.exports = resolvers;
