@@ -2,24 +2,23 @@ const { AuthenticationError } = require('apollo-server-express');
 const { signToken } = require('../utils/auth');
 const { User, Book } = require('../models');
 
+
 const resolvers = {
 
-    Query: {
-        helloWorld: () => {
-            return `Hello world`;
-        }
-    },
+    // Query: {
+    //     helloWorld: () => {
+    //         return `Hello world`;
+    //     }
+    // },
 
     Query: {
         me: async (parent, args, context) => {
             if (context.user) {
               const userData = await User.findOne({ _id: context.user._id })
                 .select('-__v -password')
-                .populate('Book')
-                          
+
               return userData;
             }
-          
             throw new AuthenticationError('Not logged in');
           }
       },
@@ -47,16 +46,22 @@ const resolvers = {
             const token = signToken(user);
             return { token, user };
           },
-          saveBook: async (parent, args) => {
+          saveBook: async (parent,saveBook) => {
             const user = await User.find({ saveBook });
-
-            return
+            if (!user) {
+              throw new AuthenticationError('User not found with this saved book data');
+            }
+          
+            return { user };
           },
-          // removeBook: async () => {
-
-
-          //   return
-          // }
+          removeBook: async (parent, bookId) => {
+            const user = await User.find({ bookId });
+            if (!user) {
+              throw new AuthenticationError('User not found with this remove book data');
+            }
+          
+            return { user };
+          }
     }
 };
 
