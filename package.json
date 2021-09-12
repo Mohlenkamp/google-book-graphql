@@ -15,5 +15,7 @@
   "devDependencies": {
     "concurrently": "^5.1.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@apollo/client": "^3.4.10"
+  }
 }

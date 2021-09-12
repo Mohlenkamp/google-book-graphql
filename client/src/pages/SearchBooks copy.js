@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect} from 'react';
 import { Jumbotron, Container, Col, Form, Button, Card, CardColumns } from 'react-bootstrap';
 
 import Auth from '../utils/auth';
 import { searchGoogleBooks } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
 
+import { useMutation } from '@apollo/react-hooks';
 import { SAVE_BOOK } from '../utils/mutations';
-import {useMutation} from '@apollo/client';
+
 
 const SearchBooks = () => {
-
-  const[saveBook, {error}] = useMutation(SAVE_BOOK);
   // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState([]);
   // create state for holding our search field data
@@ -24,6 +23,8 @@ const SearchBooks = () => {
   useEffect(() => {
     return () => saveBookIds(savedBookIds);
   });
+
+  const [saveBook, { error }] = useMutation(SAVE_BOOK);
 
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event) => {
@@ -58,26 +59,50 @@ const SearchBooks = () => {
   };
 
   // create function to handle saving a book to our database
-  const handleSaveBook = async (bookId) => {
-    // find the book in `searchedBooks` state by the matching id
-    const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
+  const handleSaveBook = async event => {
+    event.preventDefault();
 
     try {
-
       const { data } = await saveBook({
         variables: { ...searchedBooks }
       });
- 
+
       Auth.login(data.token);
       // if book successfully saves to user's account, save book id to state
+      const bookToSave = searchedBooks.find((book) => book.bookId === bookToSave.bookId);
       setSavedBookIds([...savedBookIds, bookToSave.bookId]);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
     }
   };
 
+  // const handleSaveBook = async (bookId) => {
+  //   // find the book in `searchedBooks` state by the matching id
+  //   const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
+
+  //   // get token
+  //   const token = Auth.loggedIn() ? Auth.getToken() : null;
+
+  //   if (!token) {
+  //     return false;
+  //   }
+
+  //   try {
+  //     const response = await saveBook(bookToSave, token);
+
+  //     if (!response.ok) {
+  //       throw new Error('something went wrong!');
+  //     }
+
+  //     // if book successfully saves to user's account, save book id to state
+  //     setSavedBookIds([...savedBookIds, bookToSave.bookId]);
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
   return (
-    <>
+    <div class="container">
       <Jumbotron fluid className='text-light bg-dark'>
         <Container>
           <h1>Search for Books!</h1>
@@ -135,9 +160,9 @@ const SearchBooks = () => {
             );
           })}
         </CardColumns>
-        {error && <div>Error encountered. Please retry</div>}
+        {error && <div>Error: Unable to save book to user account</div>}
       </Container>
-    </>
+    </div>
   );
 };
 
